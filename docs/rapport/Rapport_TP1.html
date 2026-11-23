@@ -35,7 +35,7 @@
   Servlets, Cookies, Sessions, JSP, JavaBeans, MVC, Filtres et Listeners</p>
   <p style="margin-top:60px;font-size:12pt"><strong>Salma Skhiri</strong><br>MP2-GL &ndash; ISIMM<br>Année universitaire 2026&ndash;2027</p>
   <p style="margin-top:40px">Encadrant : Abderrahmen Youssef</p>
-  <p style="margin-top:60px;font-size:10pt;color:#475569">Dépôt GitHub : <code>https://github.com/&lt;votre-compte&gt;/TP1-JEE</code></p>
+  <p style="margin-top:60px;font-size:10pt;color:#475569">Dépôt GitHub : <code>https://github.com/salmaskhiri/TP1-JEE</code></p>
 </div>
 
 <h2>Sommaire</h2>
@@ -126,16 +126,19 @@ javac -encoding UTF-8 --release 17 -cp %CATALINA_HOME%\lib\servlet-api.jar -d bu
 <h2>3. Intégration de Tomcat dans IntelliJ IDEA</h2>
 <p>Le support de Tomcat fait partie des fonctionnalités Jakarta EE de l'édition <strong>Ultimate</strong> d'IntelliJ IDEA, que j'utilise. Étapes suivies :</p>
 <ol>
-  <li><strong>File &rarr; Open</strong> sur le dossier <code>TP1-JEE</code> : IntelliJ détecte le <code>pom.xml</code> et importe le projet Maven (packaging <code>war</code>, dépendances <code>jakarta.servlet-api 6.0.0</code> et <code>jakarta.servlet.jsp-api 3.1.1</code> en <code>provided</code>, car fournies par Tomcat à l'exécution).</li>
-  <li><strong>File &rarr; Project Structure &rarr; SDK</strong> : sélection du JDK <code>ms-17</code>.</li>
-  <li><strong>Settings &rarr; Build, Execution, Deployment &rarr; Application Servers &rarr; + &rarr; Tomcat Server</strong>, en indiquant <code>C:\tomcat\apache-tomcat-10.1.62</code> comme <em>Tomcat Home</em> ; IntelliJ reconnaît la version 10.1.62.</li>
-  <li><strong>Run &rarr; Edit Configurations &rarr; + &rarr; Tomcat Server &rarr; Local</strong> : onglet <em>Server</em> (URL <code>http://localhost:8080/TP1/</code>, JRE 17, HTTP port 8080) ; onglet <em>Deployment</em> &rarr; <em>+ Artifact</em> &rarr; <code>TP1:war exploded</code> avec le <em>Application context</em> <code>/TP1</code>.</li>
-  <li>Option <em>On 'Update' action : Update classes and resources</em> pour recharger les JSP/classes sans redémarrer.</li>
-  <li>Lancement avec <strong>Run</strong> (ou <strong>Debug</strong> pour poser des points d'arrêt dans les servlets et filtres). Les messages des filtres/listeners apparaissent dans l'onglet <em>Server</em> de la fenêtre Services.</li>
+  <li><strong>File &rarr; Open</strong> sur le dossier <code>TP1-JEE</code>, puis <em>Trust Project</em>. IntelliJ détecte le <code>pom.xml</code> et importe le projet Maven (packaging <code>war</code>, dépendances <code>jakarta.servlet-api 6.0.0</code> et <code>jakarta.servlet.jsp-api 3.1.1</code> en <code>provided</code>, car fournies par Tomcat à l'exécution). L'import crée automatiquement deux artefacts : <code>TP1:war</code> et <code>TP1:war exploded</code>.</li>
+  <li>SDK du projet : le JDK <code>ms-17</code>.</li>
+  <li><strong>Run &rarr; Edit Configurations &rarr; Tomcat Server &rarr; Local</strong>, puis à côté de <em>Application server</em> le bouton <strong>Configure...</strong> : on indique le dossier <code>C:\tomcat\apache-tomcat-10.1.62</code> comme <em>Tomcat Home</em>, et IntelliJ détecte la version 10.1.62 (Figure I-1).</li>
+  <li>Onglet <strong>Server</strong> : URL <code>http://localhost:8080/TP1/</code>, JRE <code>ms-17</code>, port HTTP 8080 (Figure I-2).</li>
+  <li>Onglet <strong>Deployment</strong> : <em>+ &rarr; Artifact &rarr; TP1:war exploded</em> avec l'<em>Application context</em> <code>/TP1</code> (Figure I-3).</li>
+  <li>Lancement avec <strong>Run</strong> (ou <strong>Debug</strong> pour poser des points d'arrêt dans les servlets et les filtres). La sortie de Tomcat s'affiche dans la fenêtre <strong>Services</strong> (Figure I-4).</li>
 </ol>
-<p><strong>Différence observée avec le déploiement manuel :</strong> IntelliJ ne copie pas l'application dans <code>webapps</code>. Il démarre Tomcat avec un <code>CATALINA_BASE</code> séparé (dans le dossier système d'IntelliJ) et un fichier de contexte qui pointe vers l'artefact <em>exploded</em> du projet (<code>target/TP1</code>). L'installation de Tomcat reste donc propre.</p>
-<div class="todo">À compléter : capture de la fenêtre <em>Run/Debug Configurations</em> (onglets Server et Deployment) dans votre IntelliJ.</div>
-<div class="todo">À compléter : capture d'IntelliJ avec l'application lancée et la console Tomcat dans la fenêtre Services.</div>
+<figure class="half"><img src="../screenshots/ide-01-tomcat-server.jpg"><figcaption>Figure I-1 &ndash; Déclaration de Tomcat dans IntelliJ : le dossier d'installation est reconnu comme Tomcat 10.1.62.</figcaption></figure>
+<figure class="half"><img src="../screenshots/ide-02-config-server.jpg"><figcaption>Figure I-2 &ndash; Configuration d'exécution « Tomcat TP1 », onglet Server.</figcaption></figure>
+<figure class="half"><img src="../screenshots/ide-03-config-deployment.jpg"><figcaption>Figure I-3 &ndash; Onglet Deployment : artefact <code>TP1:war exploded</code> déployé sous le contexte <code>/TP1</code>.</figcaption></figure>
+<figure><img src="../screenshots/ide-04-run-console.jpg"><figcaption>Figure I-4 &ndash; Application lancée depuis IntelliJ : l'artefact est déployé (coche verte) et la fenêtre Services affiche les messages de <code>RequestListener</code>, <code>LoggingFilter</code> et <code>SecurityFilter</code>.</figcaption></figure>
+<div class="obs"><strong>Problème rencontré :</strong> au premier lancement, le déploiement a échoué avec le message <code>C:\Users\MSI\TP1-JEE\target\TP1 not found for the web module</code>. L'artefact <em>exploded</em> n'avait pas encore été construit : la configuration ne contenait que l'étape <em>Make</em> (compilation), sans l'étape <em>Build artifact</em>. Après avoir construit le dossier <code>target/TP1</code> (<code>mvn package</code>, ou <em>Build &rarr; Build Artifacts</em>) et relancé le serveur, le déploiement a réussi : <em>Artifact TP1:war exploded: Artifact is deployed successfully</em>.</div>
+<p><strong>Différence observée avec le déploiement manuel :</strong> IntelliJ ne copie pas l'application dans le dossier <code>webapps</code> de Tomcat. Il démarre Tomcat avec un <code>CATALINA_BASE</code> séparé (dans <code>%LOCALAPPDATA%\JetBrains\IntelliJIdea2026.2\tomcat\...</code>) et y déploie directement le dossier <code>target/TP1</code> du projet. On le voit dans la console : les applications d'exemple de Tomcat (<code>manager</code>, <code>docs</code>...) sont lues depuis l'installation, alors que <code>/TP1</code> vient du projet. L'installation de Tomcat n'est donc pas modifiée.</p>
 
 <!-- ===================================================================== -->
 <h2 class="pb">4. Partie 1 &ndash; Servlets</h2>
@@ -152,7 +155,6 @@ javac -encoding UTF-8 --release 17 -cp %CATALINA_HOME%\lib\servlet-api.jar -d bu
 <p>FormServlet crée un cookie par champ avec <code>response.addCookie()</code>. Les cookies sont envoyés dans l'en-tête <code>Set-Cookie</code> de la réponse et renvoyés par le navigateur dans l'en-tête <code>Cookie</code> de chaque requête suivante vers <code>/TP1</code>.</p>
 <div class="obs"><strong>Observation :</strong> la valeur d'un cookie ne peut pas contenir d'espace, de virgule, de point-virgule ni de guillemet (RFC 6265) : avec un prénom composé comme « Mohamed Ali », Tomcat lève une <code>IllegalArgumentException</code>. J'encode donc toutes les valeurs avec <code>URLEncoder.encode()</code> et je les décode dans <code>ReadCookie</code> (c'est pourquoi la date apparaît sous la forme <code>03%2F15%2F2003</code> côté navigateur). J'ai aussi fixé <code>setMaxAge(86400)</code> : sans cela le cookie est un « cookie de session » supprimé à la fermeture du navigateur.</div>
 <figure><img src="../screenshots/05-cookies-navigateur.png"><figcaption>Figure 7 &ndash; Les quatre cookies stockés par Chrome pour localhost:8080/TP1.</figcaption></figure>
-<div class="todo">Optionnel : ajouter votre propre capture de Chrome &rarr; Paramètres &rarr; Confidentialité &rarr; Cookies (ou F12 &rarr; Application &rarr; Cookies).</div>
 <figure class="half"><img src="../screenshots/06-readcookie.png"><figcaption>Figure 8 &ndash; ReadCookie relit les quatre cookies (<code>request.getCookies()</code>).</figcaption></figure>
 <p><code>ReadCookie</code> est appelée par un simple lien, donc en <code>GET</code> : c'est <code>doGet()</code> qui est implémentée (<code>doPost()</code> lui délègue). Attention, <code>request.getCookies()</code> renvoie <code>null</code> (et non un tableau vide) si le navigateur n'envoie aucun cookie.</p>
 <figure class="half"><img src="../screenshots/07-visitcounter.png"><figcaption>Figure 9 &ndash; Extra : compteur de visites stocké dans un cookie <code>visits</code> (3e visite).</figcaption></figure>
