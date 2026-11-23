@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Rapport TP1 - Servlets, JSP, MVC, Filtres et Listeners</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 10.5pt; line-height: 1.5; color: #1f2933; }
+  h1 { font-size: 22pt; color: #1d4ed8; margin: 0 0 4px; }
+  h2 { font-size: 15pt; color: #1d4ed8; border-bottom: 2px solid #dbe4ff; padding-bottom: 3px; margin-top: 26px; page-break-after: avoid; }
+  h3 { font-size: 12pt; color: #334155; margin-top: 18px; page-break-after: avoid; }
+  code { font-family: Consolas, monospace; font-size: 9.5pt; background: #f1f5f9; padding: 0 3px; border-radius: 3px; }
+  pre { font-family: Consolas, monospace; font-size: 8.8pt; background: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #1d4ed8; padding: 8px 10px; white-space: pre-wrap; page-break-inside: avoid; }
+  table { border-collapse: collapse; margin: 8px 0; width: 100%; page-break-inside: avoid; }
+  th, td { border: 1px solid #cbd5e1; padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: #eef2ff; }
+  figure { margin: 10px 0 14px; text-align: center; page-break-inside: avoid; }
+  figure img { max-width: 100%; border: 1px solid #e2e8f0; }
+  figure.half img { max-width: 72%; }
+  figcaption { font-size: 9pt; color: #475569; font-style: italic; margin-top: 3px; }
+  .cover { text-align: center; padding-top: 120px; page-break-after: always; }
+  .cover .sub { font-size: 13pt; color: #475569; }
+  .note { background: #fffbeb; border: 1px solid #fcd34d; padding: 8px 12px; border-radius: 4px; page-break-inside: avoid; }
+  .obs { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 6px 12px; margin: 8px 0; page-break-inside: avoid; }
+  .todo { background: #fef2f2; border: 2px dashed #f87171; padding: 18px; text-align: center; color: #b91c1c; margin: 10px 0; page-break-inside: avoid; }
+  .toc a { color: #1f2933; text-decoration: none; }
+  .pb { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>Compte rendu du TP1</h1>
+  <p class="sub">Technologies Web &ndash; Programmation Web Avancée<br>
+  Servlets, Cookies, Sessions, JSP, JavaBeans, MVC, Filtres et Listeners</p>
+  <p style="margin-top:60px;font-size:12pt"><strong>Salma Skhiri</strong><br>MP2-GL &ndash; ISIMM<br>Année universitaire 2026&ndash;2027</p>
+  <p style="margin-top:40px">Encadrant : Abderrahmen Youssef</p>
+  <p style="margin-top:60px;font-size:10pt;color:#475569">Dépôt GitHub : <code>https://github.com/&lt;votre-compte&gt;/TP1-JEE</code></p>
+</div>
+
+<h2>Sommaire</h2>
+<ol class="toc">
+  <li>Environnement de développement</li>
+  <li>Configuration manuelle (sans IDE)</li>
+  <li>Intégration de Tomcat dans IntelliJ IDEA</li>
+  <li>Partie 1 &ndash; Servlets : formulaire, cookies, sessions</li>
+  <li>Partie 2 &ndash; JSP et JavaBean</li>
+  <li>Partie 3 &ndash; Architecture MVC</li>
+  <li>Partie 1.4.1 &ndash; Filtres</li>
+  <li>Partie 1.4.2 &ndash; Listeners</li>
+  <li>Partie 1.4.3 &ndash; Listeners de session avancés</li>
+  <li>Bilan et difficultés rencontrées</li>
+</ol>
+
+<!-- ===================================================================== -->
+<h2>1. Environnement de développement</h2>
+<table>
+  <tr><th style="width:28%">Élément</th><th>Version / détail</th></tr>
+  <tr><td>Système</td><td>Windows 11 Pro (64 bits)</td></tr>
+  <tr><td>JDK</td><td>Microsoft Build of OpenJDK <strong>17.0.20.1</strong> (LTS), installé dans <code>C:\Users\MSI\.jdks\ms-17.0.20.1</code></td></tr>
+  <tr><td>Serveur</td><td><strong>Apache Tomcat 10.1.62</strong> (archive zip Windows x64), extrait dans <code>C:\tomcat\apache-tomcat-10.1.62</code></td></tr>
+  <tr><td>API</td><td>Jakarta Servlet 6.0 / JSP 3.1 &rarr; packages <code>jakarta.servlet.*</code> (et non <code>javax.servlet.*</code>, réservé à Tomcat 9)</td></tr>
+  <tr><td>IDE</td><td>IntelliJ IDEA Ultimate 2026.2.2 (plugins <em>Jakarta EE</em> et <em>Tomcat and TomEE</em> intégrés)</td></tr>
+  <tr><td>Outils</td><td>Git, navigateur Google Chrome (tests et outils de développement)</td></tr>
+</table>
+<p><strong>Pourquoi Tomcat 10.1 et le JDK 17 ?</strong> Tomcat 10.1 implémente Jakarta EE 10 et demande au minimum Java 11 ; le JDK 17 (LTS) était déjà installé sur ma machine. Le point important est le changement de nom des packages : depuis Jakarta EE 9, <code>javax.servlet</code> est devenu <code>jakarta.servlet</code>. Une servlet compilée avec <code>javax.servlet.http.HttpServlet</code> ne serait tout simplement pas reconnue par Tomcat 10 (erreur <code>ClassNotFoundException</code> / servlet non chargée).</p>
+<figure><img src="../screenshots/c00-version.png"><figcaption>Figure 1 &ndash; Versions détectées par Tomcat au démarrage (Tomcat 10.1.62, JVM Microsoft 17.0.20.1).</figcaption></figure>
+
+<!-- ===================================================================== -->
+<h2>2. Configuration manuelle (sans IDE)</h2>
+<p>Avant d'utiliser l'IDE, j'ai voulu comprendre ce que fait réellement un déploiement. Toute la chaîne a donc d'abord été réalisée à la main.</p>
+
+<h3>2.1 Installation de Tomcat</h3>
+<ol>
+  <li>Téléchargement de <code>apache-tomcat-10.1.62-windows-x64.zip</code> sur le site officiel <code>dlcdn.apache.org</code> et vérification de l'empreinte SHA-512 fournie par Apache (identique).</li>
+  <li>Extraction dans <code>C:\tomcat\apache-tomcat-10.1.62</code> (= <code>CATALINA_HOME</code>). Dossiers importants : <code>bin</code> (scripts), <code>conf</code> (<code>server.xml</code>, <code>web.xml</code> global), <code>lib</code> (dont <code>servlet-api.jar</code>), <code>webapps</code> (applications déployées), <code>logs</code>, <code>work</code> (JSP compilées).</li>
+  <li>Définition des variables d'environnement puis lancement en mode console :</li>
+</ol>
+<pre>set JAVA_HOME=C:\Users\MSI\.jdks\ms-17.0.20.1
+set CATALINA_HOME=C:\tomcat\apache-tomcat-10.1.62
+%CATALINA_HOME%\bin\catalina.bat run        (catalina.bat stop pour arrêter)</pre>
+<p>J'utilise <code>catalina.bat run</code> plutôt que <code>startup.bat</code> : le serveur reste dans la console courante et tous les <code>System.out.println</code> des filtres et listeners s'y affichent directement. Le port 8080 était libre (vérifié avec <code>netstat -ano</code>), aucune modification de <code>server.xml</code> n'a été nécessaire.</p>
+
+<h3>2.2 Structure de l'application</h3>
+<pre>TP1-JEE/
+├── src/main/java/
+│   ├── isep/lab1/bean/Person.java          (2.2 JavaBean pour bean.jsp)
+│   ├── lab/mvc/model/Person.java           (3.2 Modèle)
+│   ├── lab/mvc/controller/Controller.java  (3.3 Contrôleur)
+│   ├── lab/servlets/   FormServlet, ReadCookie, VisitCounter, ShowSession, ListItems,
+│   │                   LoginServlet, Logout, SessionAttributes, AttributeTest, Html, DateUtil
+│   ├── lab/filters/    LoggingFilter, SecurityFilter
+│   └── lab/listeners/  ApplicationListener, ActiveSessionListener, RequestListener,
+│                       SessionAttributeListener, ApplicationAttributeListener,
+│                       RequestAttributeListener, SessionUser
+├── src/main/webapp/
+│   ├── index.html, form.html, form-jsp.html, items.html, login.html
+│   ├── expression.jsp, scriptlet.jsp, declaration.jsp, bean.jsp, old.jsp, young.jsp
+│   └── WEB-INF/web.xml
+├── build.ps1     (compilation + déploiement manuels)
+└── pom.xml       (import dans IntelliJ / génération d'un WAR)</pre>
+<p>Une application web Java a toujours la même forme une fois déployée : les ressources publiques (HTML, JSP) à la racine, et un dossier <code>WEB-INF</code> <em>non accessible depuis le navigateur</em> qui contient <code>web.xml</code>, <code>classes/</code> (le bytecode) et éventuellement <code>lib/</code> (les jar).</p>
+
+<h3>2.3 Compilation et déploiement à la main</h3>
+<p>Le script <code>build.ps1</code> reproduit exactement les étapes manuelles :</p>
+<pre># 1. copier src/main/webapp vers build/TP1 et créer build/TP1/WEB-INF/classes
+# 2. compiler : l'API Servlet est fournie par Tomcat, on la met seulement dans le classpath
+javac -encoding UTF-8 --release 17 -cp %CATALINA_HOME%\lib\servlet-api.jar -d build\TP1\WEB-INF\classes (tous les .java)
+# 3. déployer : copier build\TP1 dans %CATALINA_HOME%\webapps\TP1</pre>
+<p>Tomcat surveille le dossier <code>webapps</code> (<code>autoDeploy="true"</code> dans <code>server.xml</code>) : dès que le dossier <code>TP1</code> apparaît, l'application est déployée sous le contexte <code>/TP1</code>, d'où l'URL <code>http://localhost:8080/TP1/</code>. Le nom du dossier (ou du fichier <code>.war</code>) donne le <em>context path</em>.</p>
+
+<h3>2.4 Le descripteur de déploiement web.xml</h3>
+<p>J'ai combiné les deux méthodes de configuration pour les comparer : la plupart des servlets utilisent <code>@WebServlet</code>, mais <code>FormServlet</code>, les deux filtres et <code>RequestListener</code> sont déclarés manuellement dans <code>web.xml</code>. L'attribut <code>metadata-complete="false"</code> indique à Tomcat de lire <em>aussi</em> les annotations.</p>
+<pre>&lt;servlet&gt;
+    &lt;servlet-name&gt;FormServlet&lt;/servlet-name&gt;
+    &lt;servlet-class&gt;lab.servlets.FormServlet&lt;/servlet-class&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+    &lt;servlet-name&gt;FormServlet&lt;/servlet-name&gt;
+    &lt;url-pattern&gt;/FormServlet&lt;/url-pattern&gt;
+    &lt;url-pattern&gt;/Form_Servlet&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;</pre>
+<figure><img src="../screenshots/c00-demarrage.png"><figcaption>Figure 2 &ndash; Déploiement de /TP1 : on voit déjà <code>ApplicationListener</code>, <code>ApplicationAttributeListener</code> et l'initialisation de <code>LoggingFilter</code> avec le paramètre <code>logPrefix</code>.</figcaption></figure>
+
+<!-- ===================================================================== -->
+<h2>3. Intégration de Tomcat dans IntelliJ IDEA</h2>
+<p>Le support de Tomcat fait partie des fonctionnalités Jakarta EE de l'édition <strong>Ultimate</strong> d'IntelliJ IDEA, que j'utilise. Étapes suivies :</p>
+<ol>
+  <li><strong>File &rarr; Open</strong> sur le dossier <code>TP1-JEE</code> : IntelliJ détecte le <code>pom.xml</code> et importe le projet Maven (packaging <code>war</code>, dépendances <code>jakarta.servlet-api 6.0.0</code> et <code>jakarta.servlet.jsp-api 3.1.1</code> en <code>provided</code>, car fournies par Tomcat à l'exécution).</li>
+  <li><strong>File &rarr; Project Structure &rarr; SDK</strong> : sélection du JDK <code>ms-17</code>.</li>
+  <li><strong>Settings &rarr; Build, Execution, Deployment &rarr; Application Servers &rarr; + &rarr; Tomcat Server</strong>, en indiquant <code>C:\tomcat\apache-tomcat-10.1.62</code> comme <em>Tomcat Home</em> ; IntelliJ reconnaît la version 10.1.62.</li>
+  <li><strong>Run &rarr; Edit Configurations &rarr; + &rarr; Tomcat Server &rarr; Local</strong> : onglet <em>Server</em> (URL <code>http://localhost:8080/TP1/</code>, JRE 17, HTTP port 8080) ; onglet <em>Deployment</em> &rarr; <em>+ Artifact</em> &rarr; <code>TP1:war exploded</code> avec le <em>Application context</em> <code>/TP1</code>.</li>
+  <li>Option <em>On 'Update' action : Update classes and resources</em> pour recharger les JSP/classes sans redémarrer.</li>
+  <li>Lancement avec <strong>Run</strong> (ou <strong>Debug</strong> pour poser des points d'arrêt dans les servlets et filtres). Les messages des filtres/listeners apparaissent dans l'onglet <em>Server</em> de la fenêtre Services.</li>
+</ol>
+<p><strong>Différence observée avec le déploiement manuel :</strong> IntelliJ ne copie pas l'application dans <code>webapps</code>. Il démarre Tomcat avec un <code>CATALINA_BASE</code> séparé (dans le dossier système d'IntelliJ) et un fichier de contexte qui pointe vers l'artefact <em>exploded</em> du projet (<code>target/TP1</code>). L'installation de Tomcat reste donc propre.</p>
+<div class="todo">À compléter : capture de la fenêtre <em>Run/Debug Configurations</em> (onglets Server et Deployment) dans votre IntelliJ.</div>
+<div class="todo">À compléter : capture d'IntelliJ avec l'application lancée et la console Tomcat dans la fenêtre Services.</div>
+
+<!-- ===================================================================== -->
+<h2 class="pb">4. Partie 1 &ndash; Servlets</h2>
+<figure class="half"><img src="../screenshots/01-index.png"><figcaption>Figure 3 &ndash; Page d'accueil (index.html) regroupant tous les exercices.</figcaption></figure>
+
+<h3>4.1 Requête POST (1.1)</h3>
+<p>Le formulaire <code>form.html</code> envoie <code>firstName</code>, <code>lastName</code>, <code>birthDay</code> (mm/dd/yyyy) et <code>sex</code> (deux boutons radio) en <code>POST</code>. <code>FormServlet.doPost()</code> lit les paramètres avec <code>request.getParameter()</code> et construit un tableau HTML. J'ai ajouté <code>request.setCharacterEncoding("UTF-8")</code> pour que les caractères accentués soient bien décodés, et un échappement HTML des valeurs (sinon un utilisateur peut injecter du HTML ou du JavaScript dans la page).</p>
+<figure class="half"><img src="../screenshots/02-form-rempli.png"><figcaption>Figure 4 &ndash; Formulaire rempli (avec le sexe en boutons radio).</figcaption></figure>
+<figure class="half"><img src="../screenshots/03-formservlet.png"><figcaption>Figure 5 &ndash; Réponse de FormServlet via <code>/FormServlet</code>.</figcaption></figure>
+<p><strong>Deux URL pour la même servlet (1.1.3) :</strong> il suffit de mettre deux <code>&lt;url-pattern&gt;</code> dans le même <code>&lt;servlet-mapping&gt;</code> (ou <code>@WebServlet({"/FormServlet","/Form_Servlet"})</code>). Il n'y a qu'<strong>une seule instance</strong> de la servlet, accessible par deux chemins.</p>
+<figure class="half"><img src="../screenshots/04-form_servlet.png"><figcaption>Figure 6 &ndash; La même servlet appelée par <code>/Form_Servlet</code>.</figcaption></figure>
+
+<h3>4.2 Cookies (1.2)</h3>
+<p>FormServlet crée un cookie par champ avec <code>response.addCookie()</code>. Les cookies sont envoyés dans l'en-tête <code>Set-Cookie</code> de la réponse et renvoyés par le navigateur dans l'en-tête <code>Cookie</code> de chaque requête suivante vers <code>/TP1</code>.</p>
+<div class="obs"><strong>Observation :</strong> la valeur d'un cookie ne peut pas contenir d'espace, de virgule, de point-virgule ni de guillemet (RFC 6265) : avec un prénom composé comme « Mohamed Ali », Tomcat lève une <code>IllegalArgumentException</code>. J'encode donc toutes les valeurs avec <code>URLEncoder.encode()</code> et je les décode dans <code>ReadCookie</code> (c'est pourquoi la date apparaît sous la forme <code>03%2F15%2F2003</code> côté navigateur). J'ai aussi fixé <code>setMaxAge(86400)</code> : sans cela le cookie est un « cookie de session » supprimé à la fermeture du navigateur.</div>
+<figure><img src="../screenshots/05-cookies-navigateur.png"><figcaption>Figure 7 &ndash; Les quatre cookies stockés par Chrome pour localhost:8080/TP1.</figcaption></figure>
+<div class="todo">Optionnel : ajouter votre propre capture de Chrome &rarr; Paramètres &rarr; Confidentialité &rarr; Cookies (ou F12 &rarr; Application &rarr; Cookies).</div>
+<figure class="half"><img src="../screenshots/06-readcookie.png"><figcaption>Figure 8 &ndash; ReadCookie relit les quatre cookies (<code>request.getCookies()</code>).</figcaption></figure>
+<p><code>ReadCookie</code> est appelée par un simple lien, donc en <code>GET</code> : c'est <code>doGet()</code> qui est implémentée (<code>doPost()</code> lui délègue). Attention, <code>request.getCookies()</code> renvoie <code>null</code> (et non un tableau vide) si le navigateur n'envoie aucun cookie.</p>
+<figure class="half"><img src="../screenshots/07-visitcounter.png"><figcaption>Figure 9 &ndash; Extra : compteur de visites stocké dans un cookie <code>visits</code> (3e visite).</figcaption></figure>
+
+<h3>4.3 Sessions HTTP (1.3)</h3>
+<p><code>request.getSession()</code> crée une session au premier appel ; Tomcat envoie alors un cookie <code>JSESSIONID</code>. Aux requêtes suivantes, le navigateur renvoie ce cookie et Tomcat retrouve la même <code>HttpSession</code>. <code>session.isNew()</code> vaut <code>true</code> tant que le client n'a pas encore renvoyé l'identifiant : c'est ce qui permet d'afficher « Welcome on my site » puis « Welcome back ».</p>
+<figure class="half"><img src="../screenshots/08-showsession-nouveau.png"><figcaption>Figure 10 &ndash; Première visite : « Welcome on my site » et formulaire de l'extra.</figcaption></figure>
+<figure class="half"><img src="../screenshots/09-showsession-retour.png"><figcaption>Figure 11 &ndash; Visite suivante : « Welcome back », compteur, et message de l'extra avec le nombre de jours avant l'anniversaire.</figcaption></figure>
+<p>Le calcul utilise <code>java.time.LocalDate</code> : on place la date de naissance dans l'année courante et, si elle est déjà passée, dans l'année suivante, puis <code>ChronoUnit.DAYS.between()</code>. Le cas du 29 février est géré par <code>withYear()</code> (il devient le 28 février les années non bissextiles). Après la soumission du formulaire, la servlet fait une redirection (motif <em>Post/Redirect/Get</em>) pour qu'un F5 ne renvoie pas le formulaire.</p>
+
+<h3>4.4 Valeurs complexes en session (1.3.2)</h3>
+<p><code>ListItems</code> stocke une <code>ArrayList&lt;String&gt;</code> dans la session. Comme l'objet stocké est une référence, il suffit d'appeler <code>items.add()</code> : inutile de refaire <code>setAttribute()</code>. Pour l'extra, je compte les occurrences avec une <code>LinkedHashMap</code> (<code>merge(item, 1, Integer::sum)</code>). L'accès à la liste est synchronisé sur la session, car deux onglets du même navigateur partagent la même session et peuvent envoyer des requêtes en parallèle (chaque requête est traitée par un thread différent).</p>
+<figure class="half"><img src="../screenshots/15-listitems.png"><figcaption>Figure 12 &ndash; ListItems avec le nombre de saisies par item (après connexion, voir partie 7).</figcaption></figure>
+
+<!-- ===================================================================== -->
+<h2 class="pb">5. Partie 2 &ndash; JSP et JavaBean</h2>
+<h3>5.1 Expressions, scriptlets, déclarations</h3>
+<table>
+  <tr><th>Élément</th><th>Syntaxe</th><th>Où le code se retrouve dans la servlet générée</th></tr>
+  <tr><td>Expression</td><td><code>&lt;%= ... %&gt;</code></td><td><code>out.print(...)</code> dans <code>_jspService()</code></td></tr>
+  <tr><td>Scriptlet</td><td><code>&lt;% ... %&gt;</code></td><td>copié tel quel dans <code>_jspService()</code> (variables locales, exécutées à chaque requête)</td></tr>
+  <tr><td>Déclaration</td><td><code>&lt;%! ... %&gt;</code></td><td>attributs et méthodes <strong>de la classe</strong> (partagés entre toutes les requêtes)</td></tr>
+</table>
+<p>En ouvrant <code>work\Catalina\localhost\TP1\org\apache\jsp\declaration_jsp.java</code>, on voit que Tomcat (Jasper) a transformé la JSP en une vraie servlet : <code>numEntries</code> et <code>randomInt()</code> sont des membres de la classe, alors que la boucle <code>for</code> est dans <code>_jspService()</code>. Une déclaration de variable modifiable est donc partagée entre tous les utilisateurs, ce qui n'est pas thread-safe.</p>
+<figure class="half"><img src="../screenshots/20-expression.png"><figcaption>Figure 13 &ndash; expression.jsp : nombre aléatoire (change à chaque rechargement).</figcaption></figure>
+<figure class="half"><img src="../screenshots/21-scriptlet.png"><figcaption>Figure 14 &ndash; scriptlet.jsp : date courante et adresse.</figcaption></figure>
+<div class="obs"><strong>Observation :</strong> l'énoncé demande l'adresse IP du serveur avec <code>request.getRemoteHost()</code>, mais cette méthode renvoie l'adresse du <em>client</em>. Ici client et serveur sont sur le même poste, d'où <code>0:0:0:0:0:0:0:1</code> (localhost en IPv6). L'adresse du serveur s'obtient avec <code>request.getLocalAddr()</code>, que j'ai affichée en plus.</div>
+<figure class="half"><img src="../screenshots/22-declaration.png"><figcaption>Figure 15 &ndash; declaration.jsp : liste de 10 nombres aléatoires.</figcaption></figure>
+<div class="obs"><strong>Observation :</strong> une JSP crée par défaut une session HTTP (variable implicite <code>session</code>). En testant <code>ActiveSessionListener</code>, j'ai remarqué que la simple visite d'une JSP augmentait le nombre de sessions actives. J'ai donc ajouté <code>&lt;%@ page session="false" %&gt;</code> aux JSP qui n'utilisent pas la session.</div>
+
+<h3>5.2 Formulaire, JSP et JavaBean (2.2)</h3>
+<p>Le bean <code>isep.lab1.bean.Person</code> respecte les conventions JavaBean : constructeur public sans argument, propriétés privées, getters/setters, <code>Serializable</code>. Comme les noms des propriétés sont identiques aux noms des champs du formulaire, <code>bean.jsp</code> peut tout remplir en une ligne :</p>
+<pre>&lt;jsp:useBean id="person" class="isep.lab1.bean.Person" scope="request" /&gt;
+&lt;jsp:setProperty name="person" property="*" /&gt;     &lt;!-- appelle setFirstName(), setLastName()... --&gt;
+&lt;jsp:getProperty name="person" property="firstName" /&gt;</pre>
+<figure class="half"><img src="../screenshots/23-bean.png"><figcaption>Figure 16 &ndash; bean.jsp : valeurs enregistrées dans le bean puis relues avec <code>jsp:getProperty</code>.</figcaption></figure>
+
+<!-- ===================================================================== -->
+<h2>6. Partie 3 &ndash; Architecture MVC</h2>
+<ul>
+  <li><strong>Modèle</strong> : <code>lab.mvc.model.Person</code> (avec en plus un constructeur à 4 paramètres).</li>
+  <li><strong>Contrôleur</strong> : <code>lab.mvc.controller.Controller</code> (seulement <code>doPost()</code>). Il lit le formulaire, crée le bean, l'ajoute à la requête (<code>request.setAttribute("person", person)</code>), puis choisit la vue selon l'année de naissance (&lt; 1990 &rarr; <code>old.jsp</code>, sinon <code>young.jsp</code>).</li>
+  <li><strong>Vues</strong> : <code>index.html</code> (formulaire), <code>old.jsp</code> et <code>young.jsp</code>.</li>
+</ul>
+<p>Dans les vues, j'utilise <code>&lt;jsp:useBean id="person" type="lab.mvc.model.Person" scope="request"/&gt;</code>. Avec <code>type</code>, la JSP <strong>ne crée pas</strong> d'objet : si l'attribut <code>person</code> est absent (par exemple si on ouvre <code>old.jsp</code> directement), on obtient une erreur au lieu d'un bean vide. Les vues n'utilisent que <code>jsp:getProperty</code> : elles affichent sans modifier le modèle.</p>
+<figure class="half"><img src="../screenshots/24-mvc-old.png"><figcaption>Figure 17 &ndash; Personne née en 1985 &rarr; old.jsp. L'URL reste <code>/Controller</code> : le choix de la vue se fait côté serveur.</figcaption></figure>
+<figure class="half"><img src="../screenshots/25-mvc-young.png"><figcaption>Figure 18 &ndash; Personne née en 2003 &rarr; young.jsp.</figcaption></figure>
+<div class="obs"><strong>include() ou forward() ?</strong> L'énoncé utilise <code>dispatcher.include()</code>. Avec <code>include</code>, la JSP est insérée dans la réponse du contrôleur, qui garde la main et pourrait encore écrire après. Avec <code>forward</code>, la réponse est entièrement déléguée à la JSP (le tampon est vidé et le contrôleur ne doit plus rien écrire) ; c'est le choix habituel pour un contrôleur MVC. Dans les deux cas il n'y a qu'<strong>une seule requête HTTP</strong> (contrairement à <code>sendRedirect</code>), c'est pourquoi l'attribut de requête <code>person</code> est encore disponible dans la JSP.</div>
+<figure><img src="../screenshots/c24-mvc.png"><figcaption>Figure 19 &ndash; Console : <code>RequestAttributeListener</code> voit l'ajout de l'attribut <code>person</code>. Les 90 ms correspondent à la première exécution : Jasper compile old.jsp en servlet.</figcaption></figure>
+
+<!-- ===================================================================== -->
+<h2 class="pb">7. Partie 1.4.1 &ndash; Filtres</h2>
+<h3>7.1 LoggingFilter</h3>
+<pre>public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) ... {
+    System.out.println(prefix + " AVANT chain.doFilter() -&gt; " + url);
+    long start = System.nanoTime();
+    chain.doFilter(request, response);             // filtre suivant ou servlet
+    double ms = (System.nanoTime() - start) / 1_000_000.0;
+    System.out.println(prefix + " APRES chain.doFilter() &lt;- " + url + " (traitee en " + ms + " ms)");
+}</pre>
+<p>Le filtre a d'abord été configuré avec <code>@WebFilter("/*")</code> (étape 1), puis l'annotation a été mise en commentaire et le filtre déclaré dans <code>web.xml</code> avec un <code>&lt;init-param&gt;</code> <code>logPrefix = [MP2-LOG]</code>, lu dans <code>init()</code> par <code>filterConfig.getInitParameter("logPrefix")</code> (étape 3). Le comportement est identique, seul le préfixe change. <strong>Il ne faut pas garder les deux</strong> : Tomcat enregistrerait alors deux filtres et chaque message apparaîtrait en double.</p>
+<figure><img src="../screenshots/c03-formservlet.png"><figcaption>Figure 20 &ndash; Console lors d'un POST sur FormServlet.</figcaption></figure>
+<p><strong>Que se passe-t-il avant et après la servlet ?</strong> Le code placé avant <code>chain.doFilter()</code> s'exécute <em>avant</em> la servlet (on peut lire, vérifier ou modifier la requête). L'appel à <code>chain.doFilter()</code> est bloquant : il exécute la servlet (ici <code>doPost()</code> de FormServlet) et ne revient qu'une fois la réponse produite. Le code après s'exécute donc quand la servlet a fini, avant que la réponse ne reparte vers le client. Le filtre « entoure » la servlet. <code>init()</code> est appelée une seule fois au déploiement (Figure 2) et <code>destroy()</code> une seule fois à l'arrêt (Figure 39).</p>
+
+<h3>7.2 LoginServlet et SecurityFilter</h3>
+<p><code>LoginServlet</code> crée/récupère la session et y stocke l'attribut <code>user</code>. <code>SecurityFilter</code>, mappé sur <code>/ListItems</code>, utilise <code>request.getSession(false)</code> : le paramètre <code>false</code> évite de créer une session vide pour un visiteur non connecté. S'il n'y a pas de session ou pas d'attribut <code>user</code>, le filtre fait <code>response.sendRedirect(".../login.html")</code> et ne fait <strong>pas</strong> appel à <code>chain.doFilter()</code>.</p>
+<table>
+  <tr><th>Situation testée</th><th>Résultat</th></tr>
+  <tr><td>Accès à ListItems sans être connecté</td><td>Redirection vers login.html (Figures 21-22)</td></tr>
+  <tr><td>Connexion puis accès à ListItems</td><td>Accès autorisé, liste affichée (Figures 23, 12, 24)</td></tr>
+  <tr><td>Suppression de l'attribut <code>user</code> (session toujours là)</td><td>Accès refusé : la session existe mais n'a plus de <code>user</code> (Figure 36)</td></tr>
+  <tr><td><code>session.invalidate()</code> puis ListItems</td><td>Accès refusé, <code>session=aucune</code> (Figures 25-26)</td></tr>
+</table>
+<figure class="half"><img src="../screenshots/13-listitems-refuse.png"><figcaption>Figure 21 &ndash; Accès direct à /ListItems sans connexion : le navigateur arrive sur login.html.</figcaption></figure>
+<figure><img src="../screenshots/c13-acces-refuse.png"><figcaption>Figure 22 &ndash; Console : accès refusé. On voit ensuite une <em>deuxième</em> requête GET login.html, envoyée par le navigateur après la redirection 302.</figcaption></figure>
+<figure class="half"><img src="../screenshots/14-login-ok.png"><figcaption>Figure 23 &ndash; LoginServlet : confirmation et lien vers items.html.</figcaption></figure>
+<figure><img src="../screenshots/c15-acces-autorise.png"><figcaption>Figure 24 &ndash; Console : accès autorisé (LoggingFilter &rarr; SecurityFilter &rarr; ListItems &rarr; SecurityFilter &rarr; LoggingFilter).</figcaption></figure>
+<figure class="half"><img src="../screenshots/18-apres-invalidate.png"><figcaption>Figure 25 &ndash; Après invalidation de la session, ListItems redirige de nouveau vers login.html.</figcaption></figure>
+<figure><img src="../screenshots/c18-invalidate-listitems.png"><figcaption>Figure 26 &ndash; Console : <code>invalidate()</code> détruit la session (tous ses attributs sont retirés) puis l'accès à ListItems est refusé.</figcaption></figure>
+<p><strong>Que se passe-t-il quand chain.doFilter() n'est pas exécuté ?</strong> La chaîne s'arrête dans le filtre : ni les filtres suivants ni la servlet ne sont exécutés (aucune trace de ListItems dans la console). La réponse renvoyée au client est uniquement celle que le filtre a produite, ici une réponse <code>302</code> avec l'en-tête <code>Location: /TP1/login.html</code>. Si le filtre n'écrivait rien du tout, le client recevrait une page blanche avec le code 200. Les filtres <em>précédents</em> reprennent quand même la main : on voit la ligne « APRES » de LoggingFilter.</p>
+
+<h3>7.3 Ordre d'exécution des filtres (1.4.1.6)</h3>
+<p><strong>Ordre 1 : LoggingFilter puis SecurityFilter</strong> (mapping de LoggingFilter écrit en premier) &ndash; voir Figures 22 et 24.</p>
+<p><strong>Ordre 2 : mappings inversés.</strong> J'ai inversé les deux <code>&lt;filter-mapping&gt;</code> dans le <code>web.xml</code> déployé. Tomcat surveille ce fichier et a rechargé automatiquement le contexte :</p>
+<figure><img src="../screenshots/c32-rechargement.png"><figcaption>Figure 27 &ndash; Rechargement automatique après modification de web.xml : destruction du filtre, des sessions et du contexte, puis réinitialisation.</figcaption></figure>
+<figure><img src="../screenshots/c31-inverse-autorise.png"><figcaption>Figure 28 &ndash; Ordre inversé, accès autorisé : SecurityFilter est maintenant le plus externe.</figcaption></figure>
+<figure><img src="../screenshots/c30-inverse-refuse.png"><figcaption>Figure 29 &ndash; Ordre inversé, accès refusé : LoggingFilter n'est <strong>jamais</strong> exécuté pour /ListItems (il ne voit que la requête suivante vers login.html).</figcaption></figure>
+<table>
+  <tr><th></th><th>Ordre Logging &rarr; Security</th><th>Ordre Security &rarr; Logging</th></tr>
+  <tr><td>Autorisé</td><td>Log AVANT, Sec AVANT, servlet, Sec APRES, Log APRES</td><td>Sec AVANT, Log AVANT, servlet, Log APRES, Sec APRES</td></tr>
+  <tr><td>Refusé</td><td>Log AVANT, Sec REFUSE, Log APRES (la requête refusée est journalisée)</td><td>Sec REFUSE uniquement (la requête refusée n'est pas journalisée)</td></tr>
+</table>
+<p><strong>Comment la FilterChain gère plusieurs filtres :</strong> pour chaque requête, Tomcat construit une <code>FilterChain</code> contenant les filtres dont le mapping correspond à l'URL, dans l'ordre d'apparition des <code>&lt;filter-mapping&gt;</code> dans <code>web.xml</code>, avec la servlet au bout. Chaque appel à <code>chain.doFilter()</code> passe à l'élément suivant ; quand il n'y a plus de filtre, c'est la servlet qui s'exécute. Les retours se font ensuite dans l'ordre inverse, comme des appels de méthodes imbriqués (une pile, ou des poupées russes). Conséquence pratique : l'ordre a un sens. Un filtre de journalisation ou de mesure du temps doit être placé en premier pour voir toutes les requêtes, y compris celles qui sont refusées. Pour les filtres déclarés avec <code>@WebFilter</code>, l'ordre n'est pas garanti par la spécification : c'est une bonne raison de passer par <code>web.xml</code> lorsque l'ordre compte.</p>
+<p><strong>Extra &ndash; temps d'exécution :</strong> mesuré avec <code>System.nanoTime()</code> (horloge monotone, adaptée aux durées, contrairement à <code>currentTimeMillis()</code>). Les requêtes simples prennent moins de 1 ms ; la première requête vers une JSP prend 70 à 90 ms car Jasper doit la traduire en Java puis la compiler.</p>
+
+<!-- ===================================================================== -->
+<h2 class="pb">8. Partie 1.4.2 &ndash; Listeners</h2>
+<h3>8.1 ApplicationListener (ServletContextListener)</h3>
+<p><code>contextInitialized()</code> est appelée une fois au déploiement, <strong>avant</strong> l'initialisation des filtres et avant toute requête (Figure 2). Elle stocke l'attribut d'application <code>appName = "MP2 Web Application"</code>, affiché ensuite par ShowSession (Figure 11). <code>contextDestroyed()</code> est appelée à l'arrêt ou au rechargement, <strong>après</strong> le <code>destroy()</code> des filtres (Figures 27 et 39). On observe aussi que la pose de <code>appName</code> déclenche immédiatement <code>ApplicationAttributeListener.attributeAdded()</code>.</p>
+
+<h3>8.2 ActiveSessionListener (HttpSessionListener)</h3>
+<p>Le compteur est un <code>AtomicInteger</code> : Tomcat traite les requêtes sur plusieurs threads, deux sessions peuvent donc être créées en même temps et un <code>int++</code> classique pourrait perdre une incrémentation. La valeur est recopiée dans l'attribut d'application <code>activeSessions</code>.</p>
+<figure><img src="../screenshots/c08-showsession.png"><figcaption>Figure 30 &ndash; Première visite de ShowSession : <code>sessionCreated()</code>, compteur à 1.</figcaption></figure>
+<figure class="half"><img src="../screenshots/10-showsession-prive.png"><figcaption>Figure 31 &ndash; Fenêtre de navigation privée : pas de cookie JSESSIONID, donc nouvelle session ; le compteur passe à 2.</figcaption></figure>
+<figure><img src="../screenshots/c11-invalidate.png"><figcaption>Figure 32 &ndash; <code>session.invalidate()</code> dans la fenêtre privée : <code>sessionDestroyed()</code>, retour à 1.</figcaption></figure>
+<figure class="half"><img src="../screenshots/12-showsession-apres-invalidate.png"><figcaption>Figure 33 &ndash; Retour dans la fenêtre normale : 1 session active.</figcaption></figure>
+<div class="obs"><strong>Observations :</strong> (1) fermer simplement la fenêtre privée ne décrémente pas le compteur : le serveur n'en est pas informé, la session ne sera détruite qu'après le délai d'inactivité (30 min, <code>&lt;session-timeout&gt;</code>). (2) Lors du rechargement du contexte et de l'arrêt de Tomcat, toutes les sessions sont détruites et le compteur revient à 0 (Figure 27). (3) Comme indiqué au 5.1, les JSP créaient des sessions « fantômes » jusqu'à l'ajout de <code>session="false"</code>.</div>
+
+<h3>8.3 RequestListener (ServletRequestListener)</h3>
+<p>Ce listener est déclaré dans <code>web.xml</code> avec <code>&lt;listener&gt;</code> (exercice 1.4.2.6) et ne porte pas d'annotation. Il fonctionne exactement comme les autres : ses messages apparaissent dans toutes les figures de console.</p>
+<p><strong>Comparaison avec LoggingFilter :</strong> sur toutes les traces, <code>requestInitialized()</code> apparaît <em>avant</em> le « AVANT » du filtre et <code>requestDestroyed()</code> <em>après</em> le « APRES » : le listener encadre toute la vie de la requête, y compris la traversée des filtres.</p>
+<table>
+  <tr><th></th><th>Filtre</th><th>Listener de requête</th></tr>
+  <tr><td>Rôle</td><td>Intercepter et agir sur la requête/réponse</td><td>Être notifié du début et de la fin d'une requête</td></tr>
+  <tr><td>Peut bloquer la requête ?</td><td>Oui (ne pas appeler <code>chain.doFilter()</code>)</td><td>Non, il observe seulement</td></tr>
+  <tr><td>Peut modifier la réponse ?</td><td>Oui (redirection, en-têtes, wrapper de réponse...)</td><td>Non</td></tr>
+  <tr><td>Ciblage</td><td>Par URL ou par servlet (<code>url-pattern</code>)</td><td>Toutes les requêtes de l'application</td></tr>
+  <tr><td>Ordre</td><td>Défini (ordre des mappings)</td><td>Pas de chaîne, simple notification</td></tr>
+  <tr><td>Exemples</td><td>Sécurité, journalisation, compression, encodage</td><td>Statistiques, nettoyage de ressources liées à une requête</td></tr>
+</table>
+
+<h3>8.4 SessionAttributeListener (HttpSessionAttributeListener)</h3>
+<figure><img src="../screenshots/c14-login.png"><figcaption>Figure 34 &ndash; Login : création de session, <code>attributeAdded(user)</code>, <code>valueBound()</code> de SessionUser puis <code>attributeAdded(sessionUser)</code>.</figcaption></figure>
+<figure><img src="../screenshots/c16-attributs-session.png"><figcaption>Figure 35 &ndash; Modification (<code>attributeReplaced</code> : <code>salma &rarr; salma_modifie</code>) puis suppressions (<code>valueUnbound</code>, <code>attributeRemoved</code>).</figcaption></figure>
+<figure><img src="../screenshots/c17-attribut-supprime.png"><figcaption>Figure 36 &ndash; Une fois l'attribut <code>user</code> supprimé, SecurityFilter refuse l'accès alors que la session existe toujours (son identifiant est affiché).</figcaption></figure>
+<p>Dans <code>attributeReplaced()</code>, <code>event.getValue()</code> renvoie l'<strong>ancienne</strong> valeur ; la nouvelle se lit dans la session. Un deuxième login avec un autre nom déclenche lui aussi <code>attributeReplaced</code>, puisque <code>setAttribute</code> sur une clé existante est un remplacement.</p>
+
+<h3>8.5 Attributs d'application et de requête (1.4.2.5)</h3>
+<p>La servlet <code>AttributeTest</code> ajoute, remplace et supprime un attribut dans chaque portée :</p>
+<figure><img src="../screenshots/c19-attributs-app-req.png"><figcaption>Figure 37 &ndash; ApplicationAttributeListener et RequestAttributeListener.</figcaption></figure>
+<figure class="half"><img src="../screenshots/19-attributetest.png"><figcaption>Figure 38 &ndash; Page AttributeTest (le compteur global est en portée application).</figcaption></figure>
+<div class="obs"><strong>Observation :</strong> sans filtrage, <code>RequestAttributeListener</code> affichait aussi des attributs que je n'avais pas créés (<code>jakarta.servlet.include.*</code>, <code>org.apache.catalina.*</code>...) : Tomcat les pose lui-même, par exemple pendant un <code>include</code> vers une JSP. Je les ai filtrés pour garder une console lisible.</div>
+<table>
+  <tr><th>Portée</th><th>Objet</th><th>Durée de vie</th><th>Visible par</th><th>Exemple du TP</th></tr>
+  <tr><td>Application</td><td><code>ServletContext</code></td><td>Du déploiement à l'arrêt de l'application</td><td>Tous les utilisateurs, toutes les servlets</td><td><code>appName</code>, <code>activeSessions</code></td></tr>
+  <tr><td>Session</td><td><code>HttpSession</code></td><td>Jusqu'à <code>invalidate()</code> ou au timeout</td><td>Un seul client (un navigateur, via JSESSIONID)</td><td><code>user</code>, <code>items</code>, <code>visitCount</code></td></tr>
+  <tr><td>Requête</td><td><code>ServletRequest</code></td><td>Le temps d'une seule requête (forward/include compris)</td><td>Les composants qui traitent cette requête</td><td><code>person</code> (MVC)</td></tr>
+</table>
+<p>Les attributs d'application et de session peuvent être lus par plusieurs threads en même temps et demandent donc de la synchronisation ; les attributs de requête n'ont pas ce problème.</p>
+
+<h3>8.6 Arrêt de l'application</h3>
+<figure><img src="../screenshots/c40-arret.png"><figcaption>Figure 39 &ndash; <code>catalina.bat stop</code> : <code>destroy()</code> du filtre puis <code>contextDestroyed()</code>.</figcaption></figure>
+
+<!-- ===================================================================== -->
+<h2 class="pb">9. Partie 1.4.3 &ndash; Listeners de session avancés (Extra)</h2>
+<h3>9.1 HttpSessionBindingListener : SessionUser</h3>
+<p><code>SessionUser</code> implémente <code>HttpSessionBindingListener</code>. LoginServlet en place une instance dans la session : <code>valueBound()</code> est appelée (Figure 34). Lors d'un <code>removeAttribute("sessionUser")</code> ou d'un <code>invalidate()</code>, c'est <code>valueUnbound()</code> qui est appelée (Figures 26 et 35). Cette classe n'a besoin ni de <code>@WebListener</code> ni de déclaration dans <code>web.xml</code>.</p>
+<table>
+  <tr><th></th><th>HttpSessionBindingListener</th><th>HttpSessionAttributeListener</th></tr>
+  <tr><td>Implémenté par</td><td>L'objet <strong>stocké</strong> lui-même</td><td>Une classe listener séparée</td></tr>
+  <tr><td>Enregistrement</td><td>Aucun : le conteneur détecte l'interface au moment du <code>setAttribute</code></td><td><code>@WebListener</code> ou <code>&lt;listener&gt;</code></td></tr>
+  <tr><td>Événements reçus</td><td>Seulement ceux qui concernent cet objet</td><td>Tous les attributs de toutes les sessions</td></tr>
+  <tr><td>Usage typique</td><td>Un objet qui gère ses ressources (ex. libérer une connexion quand l'utilisateur se déconnecte)</td><td>Audit / journalisation globale</td></tr>
+</table>
+<p>Dans la console, pour un même <code>setAttribute</code>, <code>valueBound()</code> s'exécute avant <code>attributeAdded()</code>, et à la suppression <code>valueUnbound()</code> s'exécute avant <code>attributeRemoved()</code>.</p>
+
+<h3>9.2 HttpSessionActivationListener</h3>
+<p><code>sessionWillPassivate()</code> est appelée juste <strong>avant</strong> qu'une session soit sérialisée et sortie de la mémoire (écrite sur disque ou envoyée à un autre serveur) ; <code>sessionDidActivate()</code> est appelée juste <strong>après</strong> qu'elle a été désérialisée et remise en mémoire. Les attributs qui implémentent cette interface sont prévenus.</p>
+<p>Cas d'usage : persistance des sessions au redémarrage (<code>StandardManager</code> peut écrire les sessions dans <code>SESSIONS.ser</code>), <code>PersistentManager</code> qui passe sur disque les sessions inactives pour libérer la mémoire, et clusters où une session est répliquée ou migrée vers un autre nœud (basculement, répartition de charge). Ils servent à fermer avant la passivation ce qui n'est pas sérialisable (connexion JDBC, socket, fichier ouvert, champ <code>transient</code>) et à le recréer après l'activation.</p>
+<p>Ces événements sont difficiles à observer sur un seul serveur de développement, car la session reste en mémoire pendant toute sa vie : il n'y a ni passivation (pas assez de sessions pour remplir la mémoire, pas de <code>PersistentManager</code> configuré) ni migration (un seul nœud). Il faudrait configurer un <code>PersistentManager</code> dans <code>context.xml</code>, ou un cluster de plusieurs Tomcat, ou redémarrer le serveur avec la persistance des sessions activée et des attributs sérialisables. Dans mes tests, le rechargement du contexte a <em>détruit</em> les sessions (Figure 27) au lieu de les passiver.</p>
+
+<!-- ===================================================================== -->
+<h2>10. Bilan et difficultés rencontrées</h2>
+<ul>
+  <li><strong>javax / jakarta :</strong> avec Tomcat 10.1, il faut utiliser <code>jakarta.servlet</code>. Beaucoup d'exemples en ligne utilisent encore <code>javax</code>.</li>
+  <li><strong>Lancement de Tomcat :</strong> <code>JAVA_HOME</code> doit être défini, sinon <code>catalina.bat</code> refuse de démarrer. Avec <code>catalina.bat run</code>, les messages de mes filtres et listeners s'affichent directement dans la console.</li>
+  <li><strong>Cookies :</strong> la valeur d'un cookie ne peut pas contenir d'espace ni certains caractères spéciaux, d'où l'encodage URL.</li>
+  <li><strong>Sessions et JSP :</strong> les JSP créent des sessions par défaut, ce qui faussait le compteur de sessions actives.</li>
+  <li><strong>Filtres :</strong> l'ordre des <code>&lt;filter-mapping&gt;</code> change le résultat. Une double déclaration (annotation et web.xml) crée deux instances du filtre.</li>
+  <li><strong>Redirection ou forward :</strong> <code>sendRedirect</code> produit une deuxième requête HTTP, visible dans la console et dans la barre d'adresse ; <code>forward/include</code> restent dans la même requête et conservent les attributs.</li>
+</ul>
+<p>Ce TP m'a permis de suivre concrètement le cycle de vie d'une requête dans Tomcat : <em>RequestListener &rarr; filtres (dans l'ordre de web.xml) &rarr; servlet ou JSP &rarr; filtres (dans l'ordre inverse) &rarr; RequestListener</em>, ainsi que le cycle de vie de l'application et des sessions.</p>
+
+<p style="margin-top:30px;font-size:9pt;color:#64748b">Code source complet : dépôt GitHub (lien en page de garde). Les captures de console sont des extraits du fichier de sortie de <code>catalina.bat run</code>, mis en forme et colorés par composant.</p>
+</body>
+</html>

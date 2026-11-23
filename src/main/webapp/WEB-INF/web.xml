@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Descripteur de deploiement (configuration manuelle).
+  Tomcat 10.1 => Jakarta EE 10 => Servlet 6.0, namespace jakarta.
+  Les servlets annotees (@WebServlet) et les listeners annotes (@WebListener) sont aussi
+  pris en compte car metadata-complete="false".
+-->
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0"
+         metadata-complete="false">
+
+    <display-name>TP1 - Servlets, JSP, MVC, Filtres et Listeners</display-name>
+
+    <!-- 1.1.3 : une servlet accessible par deux URL -->
+    <servlet>
+        <servlet-name>FormServlet</servlet-name>
+        <servlet-class>lab.servlets.FormServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FormServlet</servlet-name>
+        <url-pattern>/FormServlet</url-pattern>
+        <url-pattern>/Form_Servlet</url-pattern>
+    </servlet-mapping>
+
+    <!-- 1.4.1.3 : LoggingFilter declare dans web.xml (plus d'annotation @WebFilter) -->
+    <filter>
+        <filter-name>LoggingFilter</filter-name>
+        <filter-class>lab.filters.LoggingFilter</filter-class>
+        <init-param>
+            <param-name>logPrefix</param-name>
+            <param-value>[MP2-LOG]</param-value>
+        </init-param>
+    </filter>
+
+    <!-- 1.4.1.5 : SecurityFilter protege /ListItems -->
+    <filter>
+        <filter-name>SecurityFilter</filter-name>
+        <filter-class>lab.filters.SecurityFilter</filter-class>
+    </filter>
+
+    <!-- 1.4.1.6 : l'ORDRE des <filter-mapping> donne l'ordre d'execution dans la FilterChain -->
+    <!-- FILTER-ORDER-START -->
+    <filter-mapping>
+        <filter-name>LoggingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>SecurityFilter</filter-name>
+        <url-pattern>/ListItems</url-pattern>
+    </filter-mapping>
+    <!-- FILTER-ORDER-END -->
+
+    <!-- 1.4.2.6 : listener declare dans web.xml au lieu de @WebListener -->
+    <listener>
+        <listener-class>lab.listeners.RequestListener</listener-class>
+    </listener>
+
+    <!-- Duree de vie d'une session inactive : 30 minutes -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+</web-app>
